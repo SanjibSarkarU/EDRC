@@ -11,7 +11,6 @@ import functions
 HISTORY_LEN = 200000
 
 
-#
 class App(tk.Frame):
     def __init__(self, master=None, **kwargs):
         tk.Frame.__init__(self, master, **kwargs)
