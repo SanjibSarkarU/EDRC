@@ -13,7 +13,7 @@ import threading
 from geographiclib.geodesic import Geodesic
 from time import monotonic
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import MRC_Iver
+import functions
 from queue import Queue
 import pandas as pd
 from collections import deque
@@ -125,14 +125,14 @@ class App(tk.Frame):
                    str(self.current_position_iver['Latitude']) + ',' + str(self.current_position_iver['Longitude']) \
                    + ',' + str(self.current_position_iver['speed'] * 1.94384) + ',' + str(self.disnc_remaining) \
                    + ',N,0.000,P0,-1.4743,,0,292.5,0.0,94.3,False,IVER3-3089,2.5,True,False ' + '*'
-        return '$AC;IVER3-' + self.auv + ';' + iver_sta + MRC_Iver.check_sum(iver_sta) + '\r\n'
+        return '$AC;IVER3-' + self.auv + ';' + iver_sta + functions.check_sum(iver_sta) + '\r\n'
 
     def osd_ACK(self):
         return '$AC;IVER3-' + self.auv + ';$ACK,8,0,0*5D' + '\r\n'
 
     def omw_Ack(self):
         ack = '$ACK,16,0,0*'
-        return '$AC;IVER3-' + self.auv + ';' + ack + MRC_Iver.check_sum(ack) + '\r\n'
+        return '$AC;IVER3-' + self.auv + ';' + ack + functions.check_sum(ack) + '\r\n'
     
     def rf(self):
         if self.send_through_rf:
@@ -225,13 +225,13 @@ class App(tk.Frame):
                     read_com = ser_rf.readline().decode().strip() if received_data_through == 'RF' else ser_ac.readline().decode().strip()
                     print(datetime.datetime.now(), ': ComPort received: ', received_data_through, read_com)
                     # print('Status: RF: {}, AC {}', self.send_through_rf, self.send_through_ac)
-                    if MRC_Iver.received_stream(read_com) == 'osd' and MRC_Iver.osd_req_recvd(read_com) == 0:
+                    if functions.received_stream(read_com) == 'osd' and functions.osd_req_recvd(read_com) == 0:
                         print("Current Status:", self.iver_status())
                         ser_rf.write(self.iver_status().encode()) if received_data_through == 'RF' else ser_ac.write(
                             self.iver_status().encode())
                         ser_rf.write(self.osd_ACK().encode()) if received_data_through == 'RF' else ser_ac.write(self.osd_ACK().encode())
                         # print("Time write:{} sec".format(time.perf_counter() - toc_CS))
-                    elif MRC_Iver.received_stream(read_com) == 'omw' and MRC_Iver.omw_req_recvd(read_com) == 0:
+                    elif functions.received_stream(read_com) == 'omw' and functions.omw_req_recvd(read_com) == 0:
                         omw_rec = read_com.split(";")[2].split(',')
                         ser_rf.write(self.omw_Ack().encode()) if received_data_through == 'RF' else ser_ac.write(self.omw_Ack().encode())
                         print(datetime.datetime.now(), ': OMW requeest acknowledgment send:', self.omw_Ack())
