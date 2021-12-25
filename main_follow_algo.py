@@ -12,11 +12,11 @@ from rasterio.plot import show
 # import datetime as dt
 import tkinter as tk
 import threading
-from tkinter import *
+# from tkinter import *
 # from threading import Event
 import time
 # import geopy.distance
-import MRC_Iver
+import functions
 from time import monotonic
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from queue import Queue
@@ -129,10 +129,10 @@ class App(tk.Frame):
             data, addr = sock.recvfrom(1350)  # buffer size is 1024
             data_w_recived = data.decode()
             # print("WAMv data received message: ", data_w_recived)
-            if MRC_Iver.wamv_gpgll(data_w_recived) == 0:
+            if functions.wamv_gpgll(data_w_recived) == 0:
                 data_w_recived = data_w_recived.split(',')
                 data_recived = data_w_recived[1:5]
-                coordinates_w_c = MRC_Iver.ddm2dd(data_recived)
+                coordinates_w_c = functions.ddm2dd(data_recived)
                 time_stamp_w = data_w_recived[5].split('.')[0] if re.search('.', data_w_recived[5]) else data_w_recived[
                     5]
                 lat_w_c = coordinates_w_c['Lat_dd']
@@ -173,11 +173,11 @@ class App(tk.Frame):
                           str(omw_send['speed']) + ',0, *' if omw_send['NC_r_C'] == 'NClear' else \
                     'OMW,CLEAR,' + str(omw_send['lat']) + ',' + str(omw_send['lon']) + ',0.0,,10,' + \
                     str(omw_send['speed']) + ',0, *'
-                self.inst_snd = '$AC;Iver3-' + iver + ';' + '$' + ins_omw + MRC_Iver.check_sum(ins_omw) + '\r\n'
+                self.inst_snd = '$AC;Iver3-' + iver + ';' + '$' + ins_omw + functions.check_sum(ins_omw) + '\r\n'
                 
             elif len(lst_osd) > 0 and send_flag is None:
                 # lst_osd.pop(-1)
-                self.inst_snd = '$AC;Iver3-' + iver + ';' + '$' + MRC_Iver.osd() + '\r\n'
+                self.inst_snd = '$AC;Iver3-' + iver + ';' + '$' + functions.osd() + '\r\n'
                 
             if self.inst_snd is not None and (len(lst_osd) > 0 or len(lst_omw) > 0):
                 # print('i am here')
@@ -195,9 +195,9 @@ class App(tk.Frame):
                     self.q_log.put(
                         {'Time': datetime.datetime.now().strftime("%H:%M:%S.%f"), 'info': read_rf,
                          'key': 'received through RF'})
-                    if MRC_Iver.received_stream(read_rf) == 'osi' and MRC_Iver.osi(read_rf) is not None:
+                    if functions.received_stream(read_rf) == 'osi' and functions.osi(read_rf) is not None:
                         send_flag = None
-                        osi_return = MRC_Iver.osi(read_rf)
+                        osi_return = functions.osi(read_rf)
                         self.q_iverupdate_sim_IC.put({'lat': osi_return['Latitude'], 'lon': osi_return['Longitude'],
                                         'speed': osi_return['Speed'], 'key': 'updatedPositionFromIC'})
                         print(datetime.datetime.now(), ': RF:', osi_return)
@@ -207,19 +207,19 @@ class App(tk.Frame):
                         self.q_log.put(
                             {'Time': datetime.datetime.now().strftime("%H:%M:%S.%f"), 'lat': osi_return['Latitude'],
                              'lon' : osi_return['Longitude'], 'key': 'iverPosition'})
-                    elif MRC_Iver.received_stream(read_rf) == 'osdAck' and MRC_Iver.osd_ack(read_rf) == 0:
+                    elif functions.received_stream(read_rf) == 'osdAck' and functions.osd_ack(read_rf) == 0:
                         # send_flag = None
                         print(datetime.datetime.now(), ': OSD Acknowledgement from the IVER')
-                    elif MRC_Iver.received_stream(read_rf) == 'omwAck':
+                    elif functions.received_stream(read_rf) == 'omwAck':
                         send_flag = None
                         print(datetime.datetime.now(),
-                              ': OMW acknowledged' if MRC_Iver.omw_ack(read_rf) == 0 else ('Error: ', read_rf))
+                              ': OMW acknowledged' if functions.omw_ack(read_rf) == 0 else ('Error: ', read_rf))
                 elif send_flag is not None:  # send_flag == 'sending through RF':
                     send_flag = 'send through AC'
                 if len(read_ac) > 2:
-                    if MRC_Iver.received_stream(read_ac) == 'osi' and MRC_Iver.osi(read_ac) is not None:
+                    if functions.received_stream(read_ac) == 'osi' and functions.osi(read_ac) is not None:
                         send_flag, AC_flag = None, False
-                        osi_return = MRC_Iver.osi(read_rf)
+                        osi_return = functions.osi(read_rf)
                         # self.latlng_iver.append([osi_return['Latitude'], osi_return['Longitude'], osi_return['Speed']])
                         self.q_iverupdate_sim_IC.put({'lat': osi_return['Latitude'], 'lon': osi_return['Longitude'],
                                         'speed': osi_return['Speed'], 'key': 'updatedPositionFromIC'})
@@ -227,13 +227,13 @@ class App(tk.Frame):
                         self.q_plot.put({'lat': osi_return['Latitude'], 'lon': osi_return['Longitude'], 'key': 'iver',
                                          'color': 'r'})
                         self.event_iver.set()  # not required, event should be set by the iver simulation thread
-                    elif MRC_Iver.received_stream(read_ac) == 'osdAck' and MRC_Iver.osd_ack(read_ac) == 0:
+                    elif functions.received_stream(read_ac) == 'osdAck' and functions.osd_ack(read_ac) == 0:
                         # send_flag = None
                         print(datetime.datetime.now(), ': OSD Acknowledgement from the IVER')
-                    elif MRC_Iver.received_stream(read_ac) == 'omwAck':
+                    elif functions.received_stream(read_ac) == 'omwAck':
                         send_flag, AC_flag = None, False
                         print(datetime.datetime.now(),
-                              ': OMW acknowledged through AC' if MRC_Iver.omw_ack(read_rf) == 0 else ('Error: ', read_rf))
+                              ': OMW acknowledged through AC' if functions.omw_ack(read_rf) == 0 else ('Error: ', read_rf))
                 elif AC_flag:
                     if monotonic() - send_through_AC_time_start > send_through_AC_wait:
                         print(datetime.datetime.now(), ': wait time is over, AC, was not successful')
@@ -280,10 +280,10 @@ class App(tk.Frame):
             while len(latlng_lead) > 6 and len(self.current_position_iver) > 0:  # and self.event_iver.wait():
                 latlng_lead.append(self.q_lead.get())
                 # print(datetime.datetime.now(), ": *****IverFollowingLoop: ", loop, "*****")
-                lV = MRC_Iver.coordinate_fit(latlng_lead[-6:])
+                lV = functions.coordinate_fit(latlng_lead[-6:])
                 leadV_past, leadV_present = lV[0], lV[1]
                 leadV_present_lat, leadV_present_lng = leadV_present[0], leadV_present[1]
-                leadV_ha = MRC_Iver.speed_ha_coordinates(leadV_past, leadV_present)  # lead Vehicle's speed & HA
+                leadV_ha = functions.speed_ha_coordinates(leadV_past, leadV_present)  # lead Vehicle's speed & HA
                 leadV_predict_p = self.predictLoc(leadV_present_lat, leadV_present_lng, ha=leadV_ha['ha'],
                                                   speed=leadV_ha['speed'], timetopredict=predictAtTime)  #
                 iver_goal = self.predictLoc(leadV_present_lat, leadV_present_lng, ha=leadV_ha['ha'],
