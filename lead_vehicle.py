@@ -8,7 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
 import functions
 
-HISTORY_LEN = 20000
+HISTORY_LEN = 200000
 
 
 #
