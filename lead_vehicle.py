@@ -6,7 +6,7 @@ from rasterio.plot import show
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
-import MRC_Iver
+import functions
 from tkinter import *
 
 HISTORY_LEN = 20000
@@ -94,14 +94,14 @@ class App(tk.Frame):
 
     def update_graph(self, i):
         # print(i, (self.lat_w[i], self.lng_w[i]))
-        latlng = MRC_Iver.dd2ddm((self.lat_w[i], self.lng_w[i]))
+        latlng = functions.dd2ddm((self.lat_w[i], self.lng_w[i]))
         self.xdata.append(self.lng_w[i])
         self.ydata.append(self.lat_w[i])
         self.line_lead.set_data(self.xdata, self.ydata)
         self.line_lead.set_color('k')
         data = "$GPGLL," + str(latlng['Lat_ddm']) + ',' + latlng['N_S'] + ',' + str(latlng['Lng_ddm']) + ',' + \
                latlng['E_W'] + ',' + str(''.join(str(self.log_time_w[i]).split(':'))) + ',A,A*'
-        wamv_nema = data + MRC_Iver.check_sum(data) + '\r\n'
+        wamv_nema = data + functions.check_sum(data) + '\r\n'
         self.soc.sendto(bytes(wamv_nema, 'utf-8'), ('localhost', 10000))
         # print(self.lat_w[i], self.lng_w[i])
         print(wamv_nema)
