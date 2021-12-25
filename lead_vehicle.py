@@ -7,7 +7,6 @@ import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
 import functions
-from tkinter import *
 
 HISTORY_LEN = 20000
 
@@ -90,7 +89,7 @@ class App(tk.Frame):
             blit=True)
         self.running = True
         self.btn.config(text='Pause')
-        self.ani._start()
+        # self.ani._start()
 
     def update_graph(self, i):
         # print(i, (self.lat_w[i], self.lng_w[i]))
