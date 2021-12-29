@@ -57,6 +57,7 @@ class App(tk.Frame):
         # self.line_lead = self.ax1.scatter(0, 0)
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
         # self.canvas1 = FigureCanvasTkAgg(self.fig1, master=master)
+
         # img = rasterio.open('Stennis_QW.tif'), # 'Cat_Island_Low.tif'
         show(rasterio.open('Stennis_QW.tif'), ax=self.ax1)
         self.canvas.get_tk_widget().pack(expand=True)

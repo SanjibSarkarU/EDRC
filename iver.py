@@ -223,10 +223,10 @@ class App(tk.Frame):
                 if (self.send_through_rf and ser_rf.inWaiting() > 0) or (self.send_through_ac and ser_ac.inWaiting() > 0):
                     received_data_through = 'RF' if ser_rf.inWaiting() > 0 else 'AC'
                     read_com = ser_rf.readline().decode().strip() if received_data_through == 'RF' else ser_ac.readline().decode().strip()
-                    print(datetime.datetime.now(), ': ComPort received: ', received_data_through, read_com)
+                    print(datetime.datetime.now(), ':received through: ', received_data_through, read_com)
                     # print('Status: RF: {}, AC {}', self.send_through_rf, self.send_through_ac)
                     if functions.received_stream(read_com) == 'osd' and functions.osd_req_recvd(read_com) == 0:
-                        print("Current Status:", self.iver_status())
+                        print(datetime.datetime.now(), ": Sending current Status through : ", received_data_through)
                         ser_rf.write(self.iver_status().encode()) if received_data_through == 'RF' else ser_ac.write(
                             self.iver_status().encode())
                         ser_rf.write(self.osd_ACK().encode()) if received_data_through == 'RF' else ser_ac.write(self.osd_ACK().encode())
@@ -234,7 +234,7 @@ class App(tk.Frame):
                     elif functions.received_stream(read_com) == 'omw' and functions.omw_req_recvd(read_com) == 0:
                         omw_rec = read_com.split(";")[2].split(',')
                         ser_rf.write(self.omw_Ack().encode()) if received_data_through == 'RF' else ser_ac.write(self.omw_Ack().encode())
-                        print(datetime.datetime.now(), ': OMW requeest acknowledgment send:', self.omw_Ack())
+                        print(datetime.datetime.now(), ': Sending OMW acknowledgement through :', received_data_through, self.omw_Ack())
                         if re.search('CLEAR', read_com):
                             self.q_wp_omw.queue.clear()
                             self.omw_clear = True
