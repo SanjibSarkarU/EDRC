@@ -1,25 +1,16 @@
 from time import monotonic
 import time
-# import geopy.distance
+import geopy.distance
 import serial
 import pandas as pd
 import numpy as np
 # import checkSum
 import re
 import warnings
-import tkinter as tk
 from geographiclib.geodesic import Geodesic
 import numpy.polynomial.polynomial as poly
 import pymap3d as pm
 from scipy import stats
-
-# import matplotlib.pyplot as plt
-# import rasterio
-# from rasterio.plot import show
-# from tkinter import filedialog
-
-root = tk.Tk()
-root.withdraw()
 
 
 def check_sum(instruction):
@@ -140,7 +131,7 @@ def osd_req_recvd(stream):
 #     return instruction
 
 
-def osd_ack(stream):
+def osd_ack(stream: str):
     # print("osd_ack section: ", stream)
     rec_chksm = stream.split('*')[-1][0:3]
     cal_chksm = check_sum(stream.split(';')[-1][1:-2])
@@ -474,34 +465,3 @@ def iver_status(iver='3089', port_rf='com7', port_ac='com4', time_out=1, time_wa
         return osi_return
     except Exception as iverStatus:
         return osi_return
-
-# def listen_iver(iver='3089', read_port='b', port_rf='com7', port_ac='com6', time_out=1):
-#     try:
-#         if read_port == 'b':
-#             try:
-#                 ser_rf = serial.Serial(port_rf, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=time_out,
-#                                        xonxoff=0)
-#                 ser_rf.reset_output_buffer()
-#             except Exception as e_rf:
-#                 print("I am in the RF com port exception block.", e_rf)
-#                 ser_rf_open = 'notOpen'
-#             else:
-#                 ser_rf_open = 'open'
-#             try:
-#                 ser_ac = serial.Serial(port_ac, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=time_out,
-#                                        xonxoff=0)
-#                 ser_ac.reset_output_buffer()
-#             except Exception as e_ac:
-#                 print("I am in the AC com port exception block. ", e_ac)
-#                 ser_ac_open = 'notOpen'
-#             else:
-#                 ser_ac_open = 'open'
-#         elif read_port == 'r':
-#             print("Rread RF only: ")
-#         elif read_port == 'a':
-#             print(" Reading ACom port")
-#         else:
-#             print("Wrong request")
-#     except Exception as e_listen:
-#         print("Error: ", e_listen)
-#         return "None"

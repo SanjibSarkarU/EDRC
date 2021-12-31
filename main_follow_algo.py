@@ -57,6 +57,8 @@ class App(tk.Frame):
         self.x_p, self.y_p = deque([], maxlen=HISTORY_LEN), deque([], maxlen=HISTORY_LEN)
         
         self.allowed_discrepancy = 17
+        self.send_through_RF_every = 8
+        self.send_through_ac_every = 15
         self.event_iver = threading.Event()
         self.latlng_iver = []
         self.inst_snd = None
@@ -110,6 +112,7 @@ class App(tk.Frame):
         threading.Thread(target=self.iver_communication, daemon=True).start()
         threading.Thread(target=self.brain, daemon=True).start()
         threading.Thread(target=self.iver_simulation, daemon=True).start()
+        # threading.Thread(target=self.send_through_ac, daemon=True).start()
         
         self.ani = animation.FuncAnimation(
             self.fig,
@@ -142,7 +145,25 @@ class App(tk.Frame):
                 self.q_log.put({'Time': datetime.datetime.now().strftime("%H:%M:%S.%f"), 'Latitude': lat_w_c,
                                 'Longitude': lng_w_c, 'TimeFrom_Lead': time_stamp_w, 'key': 'lead_vehicle'})
             lead_comm_time = monotonic()
-    
+
+    def send_through_rf(self):
+        # send_through_RF_every = int(input('How often send OSD through RF in sec: '))
+        threading.Timer(self.send_through_RF_every, self.send_through_rf).start()
+        inst_snd = '$AC;Iver3-' + iver + ';' + '$' + functions.osd() + '\r\n'
+        ser_rf.reset_output_buffer()
+        ser_rf.write(inst_snd.encode())
+        print(datetime.datetime.now(), ': Sending through RF: ',)
+        # self.q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ': send trough RF: '])
+
+    def send_through_ac(self):
+        # send_through_ac_every = int(input('How often send OSD through AC in sec: '))
+        threading.Timer(self.send_through_ac_every, self.send_through_ac).start()
+        inst_snd = '$AC;Iver3-' + iver + ';' + '$' + functions.osd() + '\r\n'
+        ser_ac.reset_output_buffer()
+        ser_ac.write(inst_snd.encode())
+        print(datetime.datetime.now(), ': Sending through AC:')
+        # self.q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ': send trough AC:'])
+
     def iver_communication(self):
         ser_rf.reset_output_buffer()
         ser_rf.reset_input_buffer()
