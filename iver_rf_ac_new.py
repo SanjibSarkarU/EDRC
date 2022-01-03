@@ -131,7 +131,7 @@ def send_through_ac():
 
 def init(ax):
     # 'Cat_Island_Low.tif', 'Stennis_QW.tif'
-    with rasterio.open('stennis_QW.tif', driver='GTiff') as data:
+    with rasterio.open('Cat_Island_Low.tif', driver='GTiff') as data:
         im = show(data, ax=ax)
         print(data.profile)
     return []
