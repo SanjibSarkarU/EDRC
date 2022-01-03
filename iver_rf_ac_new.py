@@ -1,3 +1,4 @@
+""" Read com ports RF and AC"""
 import threading
 import datetime
 import tkinter as tk
@@ -27,15 +28,15 @@ ac_port = str(input('AC COMPort: '))  # 'COM5'
 ser_rf = serial.Serial(rf_port, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=TIMEOUT_RF, xonxoff=0)
 ser_ac = serial.Serial(ac_port, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=TIMEOUT_AC, xonxoff=0)
 
-iver = '3072'
+iver = '3089'
 
 send_through_rf_every = 2  # int(input('How often send OSD through RF in sec: '))
-send_through_ac_every = 20  # int(input('How often send OSD through AC in sec: '))
+send_through_ac_every = 25  # int(input('How often send OSD through AC in sec: '))
 
 
 def read_rf():
     """Read RF port"""
-    scatter_artist = ta.ScatterArtist(q_art, s=10, label='scatter plot', c='r', marker='o')
+    scatter_artist = ta.ScatterArtist(q_art, s=20, label='scatter plot', c='r', marker='o')
     ser_rf.reset_input_buffer()
     send_through_rf()
     osi_rec, osd_ak = 0, 0
@@ -48,9 +49,9 @@ def read_rf():
                     osi_return = functions.osi(frm_iver)
                     if functions.osi(frm_iver) is not None:
                         print(datetime.datetime.now(), ': RF: lat:', osi_return['Latitude'],
-                              'lng: ', osi_return['Longitude'], 'speed:', osi_return['Speed'],
-                              'Battery: ', osi_return['Battery'], 'nxtWP: ', osi_return['NextWp'],
-                              'DistantNxt WP: ', osi_return['DistanceToNxtWP'])
+                              'lng:', osi_return['Longitude'], ', speed:', osi_return['Speed'],
+                              ', Battery:', osi_return['Battery'], ', nxtWP:', osi_return['NextWp'],
+                              ', DistantNxt WP: ', osi_return['DistanceToNxtWP'])
                         scatter_artist.add_data_to_artist((osi_return['Longitude'], osi_return['Latitude']))
                         q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ':', osi_return])
                         print(datetime.datetime.now(), f': OSI received RF: {osi_rec} / requested: {rf_i}')
@@ -68,7 +69,7 @@ def read_rf():
 
 def read_ac():
     """ Reading AC port """
-    scatter_artist_ac = ta.ScatterArtist(q_art, s=10, label='scatter plot', color='b', marker='*')
+    scatter_artist_ac = ta.ScatterArtist(q_art, s=20, label='scatter plot', color='b', marker='*')
     ser_ac.reset_input_buffer()
     send_through_ac()
     osi_rec, osd_ak = 0, 0
@@ -81,9 +82,9 @@ def read_ac():
                     osi_return = functions.osi(frm_iver)
                     if functions.osi(frm_iver) is not None:
                         print(datetime.datetime.now(), ': RF: lat:', osi_return['Latitude'],
-                              'lng: ', osi_return['Longitude'], 'speed:', osi_return['Speed'],
-                              'Battery: ', osi_return['Battery'], 'nxtWP: ', osi_return['NextWp'],
-                              'DistantNxt WP: ', osi_return['DistanceToNxtWP'])
+                              'lng: ', osi_return['Longitude'], ', speed:', osi_return['Speed'],
+                              ', Battery: ', osi_return['Battery'], ', nxtWP: ', osi_return['NextWp'],
+                              ', DistantNxt WP: ', osi_return['DistanceToNxtWP'])
                         scatter_artist_ac.add_data_to_artist((osi_return['Longitude'], osi_return['Latitude']))
                         q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ':', osi_return])
                         print(datetime.datetime.now(), f': OSI received AC: {osi_rec} / requested: {ac_i}')
@@ -126,7 +127,7 @@ def send_through_ac():
     global ac_i
     print(datetime.datetime.now(), ': Sending through AC: ', ac_i)
     # q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ': send trough AC: '])
-    ac_i +=1
+    ac_i += 1
 
 
 def init(ax):
