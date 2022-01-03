@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 from queue import Queue
 import threadartists as ta
 import functions
+import socket
+
 
 
 filepath = r"C:\Log_files"
@@ -32,6 +34,32 @@ iver = '3089'
 
 send_through_rf_every = 2  # int(input('How often send OSD through RF in sec: '))
 send_through_ac_every = 25  # int(input('How often send OSD through AC in sec: '))
+
+UDP_IP = "192.168.168.3"
+UDP_PORT = 5014
+
+# UDP_IP = 'localhost'
+# UDP_PORT = 10000
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+sock.bind((UDP_IP, UDP_PORT))
+
+def wamv():
+    line_artist = ta.LineArtist(q_art, label='wamv trace', c='y')
+    while True:
+        data, addr = sock.recvfrom(1350)  # buffer size is 1024
+        data_w_recived = data.decode()
+        print(datetime.datetime.now(), ':WAMv data received message:', data_w_recived)
+        if functions.wamv_gpgll(data_w_recived) == 0:
+            data_w_recived = data_w_recived.split(',')
+            data_recived = data_w_recived[1:5]
+            coordinates_w_c = functions.ddm2dd(data_recived)
+            lat_w_c = coordinates_w_c['Lat_dd']
+            lng_w_c = coordinates_w_c['Lng_dd']
+            line_artist.add_data_to_artist((lng_w_c, lat_w_c ))
+            # q_lead.put([lat_w_c, lng_w_c, time_stamp_w])
+            q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ': WAMV: ', data_w_recived])
 
 
 def read_rf():
@@ -105,7 +133,6 @@ rf_i = 0
 
 def send_through_rf():
     # send_through_ac_every = 15
-    threading.Timer(send_through_rf_every, send_through_rf).start()
     inst_snd = '$AC;Iver3-' + iver + ';' + '$' + functions.osd() + '\r\n'
     ser_rf.reset_output_buffer()
     ser_rf.write(inst_snd.encode())
@@ -113,6 +140,7 @@ def send_through_rf():
     print(datetime.datetime.now(), ': Sending through RF: ', rf_i)
     q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ': send trough RF: ', rf_i])
     rf_i += 1
+    threading.Timer(send_through_rf_every, send_through_rf).start()
 
 
 ac_i = 0
@@ -120,19 +148,19 @@ ac_i = 0
 
 def send_through_ac():
     # send_through_ac_every = 25
-    threading.Timer(send_through_ac_every, send_through_ac).start()
     inst_snd = '$AC;Iver3-' + iver + ';' + '$' + functions.osd() + '\r\n'
     ser_ac.reset_output_buffer()
     ser_ac.write(inst_snd.encode())
     global ac_i
     print(datetime.datetime.now(), ': Sending through AC: ', ac_i)
-    # q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ': send trough AC: '])
+    q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ': send trough AC: '])
     ac_i += 1
+    threading.Timer(send_through_ac_every, send_through_ac).start()
 
 
 def init(ax):
     # 'Cat_Island_Low.tif', 'Stennis_QW.tif'
-    with rasterio.open('Cat_Island_Low.tif', driver='GTiff') as data:
+    with rasterio.open('Stennis_QW.tif', driver='GTiff') as data:
         im = show(data, ax=ax)
         print(data.profile)
     return []
@@ -167,6 +195,7 @@ if __name__ == '__main__':
     threading.Thread(target=read_rf, daemon=True).start()
     threading.Thread(target=read_ac, daemon=True).start()
     threading.Thread(target=log_data, daemon=True).start()
+    threading.Thread(target=wamv, daemon =True).start()
 
     anim = animation.FuncAnimation(fig, ta.animate, frames=ta.artist_manager(ax, fig, q_art),
                                    init_func=lambda: init(ax), interval=50, blit=True, repeat=True)
