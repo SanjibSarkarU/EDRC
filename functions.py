@@ -227,16 +227,14 @@ def ddm2dd(coordinates):
     Input Ex.:  ['3020.1186383580', 'N', '0894.5222887340', 'W'],
     return: {'Lat_dd': float(lat_dd), 'Lng_dd': float(lng_dd)} """
     lat, lat_direction, lng, lng_direction = coordinates[0], coordinates[1], coordinates[2], coordinates[3]
-    lat = ''.join(lat.split('.'))
-    lat_ddm = lat[:2] + '.' + str(int(int(lat[2:]) / 60))
-    lat_dd = '{}'.format('-' + lat_ddm if lat_direction == 'S' else lat_ddm)
-    lng_ddm = ''.join('{}'.format(lng[1:] if lng.startswith('0') else lng).split('.'))
-    is_zero = lng_ddm[2:].startswith('0')
-    lng_ddm = lng_ddm[:2] + '.' + (str(int(int(lng_ddm[2:]) / 60)) if not is_zero else ('0' + str(int(int(lng_ddm[2:]) / 60))))
-    lng_dd = '{}'.format('-' + lng_ddm if lng_direction == 'W' else lng_ddm)
+    lat = lat[1:] if lat.startswith('0') else lat
+    lat_ddm = lat[:2] + str(float(lat[2:]) / 60)[1:]
+    lat_dd = '{}'.format(lat_ddm if lat_direction == 'N' else '-' + lat_ddm)
+    lng = lng[1:] if lng.startswith('0') else lng
+    lng_ddm = lng[:2] + str(float(lng[2:]) / 60)[1:]
+    lng_dd = '{}'.format(lng_ddm if lng_direction == 'E' else '-' + lng_ddm)
     dd = {'Lat_dd': float(lat_dd), 'Lng_dd': float(lng_dd)}
     return dd
-
 
 def dd2ddm(coordinates):
     """ Convert degree decimal to degree decimal minute;"""
