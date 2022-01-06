@@ -237,21 +237,19 @@ def ddm2dd(coordinates):
     return dd
 
 def dd2ddm(coordinates):
-    """ Convert degree decimal to degree decimal minute;"""
-    # lat, lng = ''.join(str(coordinates[0]).split('.')), ''.join(str(coordinates[1]).split('.'))
-    lat, lng = ''.join(str(coordinates[0]).split('.')), str(coordinates[1])
-    lat = lat[:2] + ''.join(str(int(int(lat[2:]) * 60)).split('.'))
-    lat = lat[:4] + '.' + lat[4:]
-    lat_ddm = lat
-    lng_ddm = '{}'.format(lng[1:] if lng.startswith('-') else lng)
-    lng_ddm = lng_ddm.split('.')
-    is_zero = lng_ddm[1].startswith('0')
-    # lng_ddm = lng_ddm[:2] + ''.join(str((int(int(lng_ddm[2:]) * 60))).split('.'))
-    lng_ddm = lng_ddm[0] + '{}'.format('0' + str(int(lng_ddm[1])*60) if is_zero else str(int(lng_ddm[1])*60))
+    """ Convert degree decimal to degree decimal minute;
+     return: {'Lat_ddm': lat_ddm, 'N_S': 'S' if lat_sign else 'N',
+           'Lng_ddm': lng_ddm, 'E_W': 'W' if lng_sign else 'E'}"""
+    lat, lng = str(coordinates[0]), str(coordinates[1])
+    lat_sign = lat.startswith('-')
+    lat = '{}'.format(lat[1:] if lat.startswith('-') else lat)
+    lat_ddm = lat[:2] + str(float(lat[2:]) * 60)
+    lng_sign = lng.startswith('-')
+    lng = '{}'.format(lng[1:] if lng.startswith('-') else lng)
+    lng_ddm = lng[:2] + str(float(lng[2:]) * 60)
     lng_ddm = lng_ddm.zfill(len(lng_ddm) + 1)
-    lng_ddm = lng_ddm[:4] + '.' + lng_ddm[4:]
-    ddm = {'Lat_ddm': lat_ddm, 'N_S': 'S' if lat.startswith('-') else 'N',
-           'Lng_ddm': lng_ddm, 'E_W': 'W' if lng.startswith('-') else 'E'}
+    ddm = {'Lat_ddm': lat_ddm, 'N_S': 'S' if lat_sign else 'N',
+           'Lng_ddm': lng_ddm, 'E_W': 'W' if lng_sign else 'E'}
     return ddm
 
 
