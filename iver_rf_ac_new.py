@@ -58,7 +58,6 @@ def wamv():
             lat_w_c = coordinates_w_c['Lat_dd']
             lng_w_c = coordinates_w_c['Lng_dd']
             line_artist.add_data_to_artist((lng_w_c, lat_w_c ))
-            # q_lead.put([lat_w_c, lng_w_c, time_stamp_w])
             q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ': WAMV: ', data_w_recived])
 
 
@@ -109,10 +108,10 @@ def read_ac():
                 if functions.received_stream(frm_iver) == 'osi':
                     osi_return = functions.osi(frm_iver)
                     if functions.osi(frm_iver) is not None:
-                        print(datetime.datetime.now(), ': RF: lat:', osi_return['Latitude'],
+                        print(datetime.datetime.now(), ': AC: lat:', osi_return['Latitude'],
                               'lng: ', osi_return['Longitude'], ', speed:', osi_return['Speed'],
                               ', Battery: ', osi_return['Battery'], ', nxtWP: ', osi_return['NextWp'],
-                              ', DistantNxt WP: ', osi_return['DistanceToNxtWP'])
+                              ', DisNxtWP: ', osi_return['DistanceToNxtWP'])
                         scatter_artist_ac.add_data_to_artist((osi_return['Longitude'], osi_return['Latitude']))
                         q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ':', osi_return])
                         print(datetime.datetime.now(), f': OSI received AC: {osi_rec} / requested: {ac_i}')
