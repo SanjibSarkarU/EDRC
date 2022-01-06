@@ -50,7 +50,7 @@ def wamv():
     while True:
         data, addr = sock.recvfrom(1350)  # buffer size is 1024
         data_w_recived = data.decode()
-        print(datetime.datetime.now(), ':WAMv data received message:', data_w_recived)
+        print(datetime.datetime.now(), ':WAMv data received:', data_w_recived)
         if functions.wamv_gpgll(data_w_recived) == 0:
             data_w_recived = data_w_recived.split(',')
             data_recived = data_w_recived[1:5]
