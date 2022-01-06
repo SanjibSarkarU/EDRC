@@ -1,10 +1,19 @@
+__author__ = 'Sanjib Sarkar'
+__copyright__ = ''
+__credits__ = ['', '']
+__license__ = ''
+__version__ = '1.0.0'
+__date__ = '01/06/2022'
+__maintainer__ = 'Sanjib Sarkar'
+__email__ = 'sanjib.sarkar@usm.edu'
+__status__ = 'Prototype'
+
 from time import monotonic
 import time
 import geopy.distance
 import serial
 import pandas as pd
 import numpy as np
-# import checkSum
 import re
 import warnings
 from geographiclib.geodesic import Geodesic
@@ -119,18 +128,6 @@ def osd_req_recvd(stream):
         return 1
 
 
-# def osd_3089():
-#     ins_osd_3089 = 'OSD,,,S,,,,,*'
-#     instruction = ins_osd_3089 + check_sum(ins_osd_3089)
-#     return instruction
-
-
-# def osd_3072():
-#     ins_osd_3072 = 'OSD,,,S,,,,,*'
-#     instruction = ins_osd_3072 + check_sum(ins_osd_3072)
-#     return instruction
-
-
 def osd_ack(stream: str):
     # print("osd_ack section: ", stream)
     rec_chksm = stream.split('*')[-1][0:3]
@@ -178,49 +175,6 @@ def wamv_gpgll(stream):
         return 1
 
 
-'''
-def dd_ddm_nmea_lat(coordinates):
-    # coordinates = float
-    coordinates = str(coordinates)
-    if re.search('-', coordinates):
-        coordinates = coordinates.strip('-')
-    coordinates = coordinates.split('.')
-    co_return = ''.join((coordinates[0] + '.' + str(int(coordinates[-1]) * 60)).split('.'))
-    co_return = co_return[:4] + '.' + co_return[4:]
-    return co_return
-
-
-def dd_ddm_nmea_lng(coordinates):
-    # coordinates = float
-    coordinates = str(coordinates)
-    coordinates = '{}'.format(coordinates[1:] if coordinates.startswith('-') else coordinates)
-    # if re.search('-', coordinates):
-    #     coordinates = coordinates.strip('-')
-    coordinates = coordinates.split('.')
-    co_return = ''.join((coordinates[0] + '.' + str(int(coordinates[-1]) * 60)).split('.'))
-    co_return = co_return.zfill(len(co_return) + 1)
-    co_return = (co_return[:4] + '.' + co_return[4:])
-    # print(co_return)
-    return co_return
-
-
-def ddm_dd_nmea_lat(coordinates):
-    coordinates = ''.join(str(coordinates).split('.'))
-    co_return = ''.join(coordinates[:2] + '.' + str(int(int(coordinates[2:]) / 60)))
-    return co_return
-
-
-def ddm_dd_nmea_lng(coordinates):
-    coordinates = str(coordinates)
-    coordinates = '{}'.format(coordinates[1:] if coordinates.startswith('0') else coordinates)
-    # print((coordinates))
-    coordinates = ''.join(coordinates.split('.'))
-    co_return = coordinates[:2] + '.' + ''.join(str(float(coordinates[2:]) / 60).split('.'))
-    # print(co_return)
-    return co_return
-'''
-
-
 # ddm = degree, decimal minutes, dd = degree decimal
 def ddm2dd(coordinates):
     """ Convert degree, decimal minutes to degree decimal; return 'Lat_dd': float(lat_dd), 'Lng_dd': float(lng_dd)}
@@ -235,6 +189,7 @@ def ddm2dd(coordinates):
     lng_dd = '{}'.format(lng_ddm if lng_direction == 'E' else '-' + lng_ddm)
     dd = {'Lat_dd': float(lat_dd), 'Lng_dd': float(lng_dd)}
     return dd
+
 
 def dd2ddm(coordinates):
     """ Convert degree decimal to degree decimal minute;
@@ -254,7 +209,10 @@ def dd2ddm(coordinates):
 
 
 def speed_ha_coordinates(coordinate1_withtimestamp, coordinate2_withtimestamp):
-    # ['30.35059', '-89.62995', '104139']  # example coordinate_withtimestamp
+    """ Return heading angle, speed, and distance;
+    input:coordinates with timestamp: ['30.35059', '-89.62995', '104139'],
+                                      ['30.35059', '-89.62995', '104139'] """
+
     geod = Geodesic(6378388, 1 / 297.0)
     co1 = coordinate1_withtimestamp[0:2]
     co1_time = coordinate1_withtimestamp[-1]
@@ -274,7 +232,8 @@ def speed_ha_coordinates(coordinate1_withtimestamp, coordinate2_withtimestamp):
         speed = distance / time_diff
         result = {'speed': speed, 'ha': ha, 'dis12': distance}
     except ZeroDivisionError:
-        result = {'speed': 0, 'ha': ha, 'dis12': distance}
+        print('Time difference between two coordinates is zero.')
+        result = None
     return result
 
 
@@ -351,11 +310,6 @@ def coordinate_fit(df, deg=1):
     
     ' Apply linear regression'
     slope, intercept, r_value, p_value, std_err = stats.linregress(m, n)
-    
-    # def linefitline(x):
-    # 	return intercept + slope * x
-    #
-    # line = linefitline(m)
     line = list(map(lambda b: intercept + slope * b, m))
     df['line'] = line
     'perpendicular on the '
@@ -363,16 +317,10 @@ def coordinate_fit(df, deg=1):
     b = np.array([df.x_c[len(df['x_c']) - 1], df.line[len(df['line']) - 1]])
     x_1, y_1 = point_on_line(a, b, p1)
     x_2, y_2 = point_on_line(a, b, p2)
-    'Back to lat lng'
+    'Back to the lat lng'
     lat1, lng1, _h1 = pm.enu2geodetic(x_1, y_1, df.h[0], df.lat[0], df.lon[0], df.h[0], ell=None, deg=True)
     lat2, lng2, _h2 = pm.enu2geodetic(x_2, y_2, df.h[0], df.lat[0], df.lon[0], df.h[0], ell=None, deg=True)
     result = [[lat1, lng1, df.t[0]], [lat2, lng2, df.t[len(df.t) - 1]]]
-    
-    # x = np.linspace(df.lon[0], df.lon[len(df['lon']) - 1], num=len(df['lon']) * 15)
-    # ffit = poly.polyval(x, poly.polyfit(df['lon'], df['lat'], deg=deg))
-    # lat, lng = ffit[-1], df.lon[len(df['lon']) - 1]
-    # # result = {'lat': lat, 'lng': lng, 't': df.t[len(df['t']) - 1]}
-    # result = [lat, lng, df.t[len(df['t']) - 1]]
     return result
 
 
