@@ -7,14 +7,16 @@ the list of artists.
 
 from abc import ABC, abstractmethod
 from enum import Enum, auto
+import numpy as np
 import threading
+import queue
 import logging
 import time
 from matplotlib import pyplot as plt
-import numpy as np
-import queue
-import rasterio
 from matplotlib import transforms
+import rasterio
+from bisect import bisect
+
 
 __author__ = 'Gero Nootz'
 __copyright__ = ''
@@ -44,7 +46,6 @@ class Artist(ABC):
         self.kwargs = kwargs
         self.add_or_del_artist = Add_del_art.add
         self.artist_exsits = False
-        self.art_data = np.array([], dtype=float).reshape(0, 2)
         self.q_art.put(self)
         while self.artist_exsits == False: # wait for artist cration 
             time.sleep(0.1)
@@ -94,15 +95,16 @@ class ImageArtist(Artist):
     """
 
     def create_artist(self):
-        self.artist = self.ax.imshow([[]], origin='upper',
-                zorder=10, animated=True, **self.kwargs)
-        # print(plt.getp(self.artist))
-        # print(plt.getp(ax))
+        self.artist = self.ax.imshow([[]], extent=(
+            0, 1, 0, 1), origin='upper', animated=True, **self.kwargs)
         return self.artist
 
-    def add_data_to_artist(self, fname: str, size: float, position):
+    def add_data_to_artist(self, fname: str, size: float, position, deg: float):
+        """ 
+        !!!!!!!!!! Cleanup requierd !!!!!!!!!!!!!!!!
         
-        # print('pos: ', position)
+        Add data to artist    
+        """
         self.size = size
         left, right = self.ax.get_xlim() 
         bottom, top = self.ax.get_ylim()
@@ -115,7 +117,10 @@ class ImageArtist(Artist):
         right = del_x + position[0]
         bottom = -del_x*aspect + position[1]
         top = del_x*aspect + position[1]
-        # print('LRBT1: ', left, right, bottom, top)        
+        # print('LRBT1: ', left, right, bottom, top)     
+        trans_data = transforms.Affine2D().rotate_deg_around(
+            position[0], position[1], deg) + self.ax.transData
+        self.artist.set_transform(trans_data)  
         plt.setp(self.artist, extent=(left, right, bottom, top))
         self.image = plt.imread(fname)
         self.artist.set_array(self.image)
@@ -154,10 +159,7 @@ class GeoTifArtist(Artist):
     
     def create_artist(self):
         self.artist = self.ax.imshow([[]], extent=(
-                                         0, 1, 0, 1), origin='upper', **self.kwargs)
-        # self.artist = self.ax.imshow([[]], origin='upper', zorder=10, animated=True)
-        # print(plt.getp(self.artist))
-        # print(plt.getp(ax))
+            0, 1, 0, 1), origin='upper', **self.kwargs)
         return self.artist
 
     def add_data_to_artist(self, fname: str):
@@ -185,6 +187,7 @@ class ScatterArtist(Artist):
     """
 
     def create_artist(self):
+        self.art_data = np.array([], dtype=float).reshape(0, 2)
         self.artist = self.ax.scatter([], [], animated=True, **self.kwargs)
         return self.artist
 
@@ -206,6 +209,7 @@ class LineArtist(Artist):
     """
 
     def create_artist(self):
+        self.art_data = np.array([], dtype=float).reshape(0, 2)
         self.artist, = self.ax.plot([], [], animated=True, **self.kwargs)
         return self.artist
 
@@ -219,18 +223,20 @@ class LineArtist(Artist):
             0, 2)  # prepare (N,2) array
         self.artist.set_data(self.art_data[:, 0], self.art_data[:, 1])
 
-def artist_manager(ax: plt.axes, fig: plt.figure,q_art: queue.Queue) -> list:
+def gallerist(ax: plt.axes, fig: plt.figure,q_art: queue.Queue) -> list:
     """
     Collects new artists received from ABC Artist(ABC) via a queue
     into a list of artists to be animated in matplotlib.animation.FuncAnimation.
     When the destructor of Artist(ABC) is called the artist is deleted from the
-    list of artists. !! However, deleting is currently not working reliably and I
-    do not know why !!
+    list of artists. 
     -> returns a list of artists
+
+    Things to do:
+    Order artists acoring to zorder so they are plotted in the right order with zorder=3 on top
     """
     artists = []
+    artist_zorder_list = []
     artist_ids: int = []
-    i: int = 0
 
     while True:
         try:
@@ -243,22 +249,27 @@ def artist_manager(ax: plt.axes, fig: plt.figure,q_art: queue.Queue) -> list:
                 art_obj.register_ax(ax)
                 art_obj.register_fig(fig)
                 artist = art_obj.create_artist()
-                artist_ids.append(id(art_obj))
-                artists.append(artist)
+
+                # order artists according to zorder
+                zorder_value = artist.get_zorder()
+                zpos = bisect(artist_zorder_list, zorder_value)
+                artist_zorder_list.insert(zpos, zorder_value)
+                artist_ids.insert(zpos, id(art_obj))
+                artists.insert(zpos, artist)
+
                 art_obj.set_artist_exsits(True)
             elif art_obj.add_or_del_artist == Add_del_art.delete:
                 logging.info('deleting artist with label: %s', art_obj.kwargs['label'])
                 index = artist_ids.index(id(art_obj))
                 del artist_ids[index]
+                del artist_zorder_list[index]
                 del artists[index]
                 art_obj.set_artist_exsits(False)
             else:
                 logging.error('not of enum type Add_del_art')
 
             art_obj = None # delete ref to object so destructor can be called
-            q_art.task_done()
-
-
+            # q_art.task_done()
         yield artists
 
 def animate(artists: list) -> list:
@@ -299,7 +310,7 @@ if __name__ == '__main__':
         """Work in progress..."""
         # image = plt.imread('yota.png')    
         artist = ImageArtist(q_art, label='image plot')
-        artist.add_data_to_artist('yota.png', 0.1, (1,0))
+        artist.add_data_to_artist('yota.png', 0.1, (1,0), 0)
         while True: 
             data = np.random.rand(2)    
             new_xy = (data[0]*2, data[1]*2 - 1) 
@@ -313,7 +324,7 @@ if __name__ == '__main__':
         delay = np.random.rand()*10    
         sleep = np.random.rand() 
     
-        artist = LineArtist(q_art, label='line plot')
+        artist = LineArtist(q_art, label='line plot', zorder=10)
         logging.debug('createdg artist %i for provide_line1', id(artist))
 
         time.sleep(delay)   
@@ -394,6 +405,6 @@ if __name__ == '__main__':
     threading.Thread(target=plot_image, daemon = True).start()   
     threading.Thread(target=plot_geotif, daemon = True).start()   
     
-    anim = animation.FuncAnimation(fig, animate, frames=artist_manager(ax, fig, q_art), init_func=init, 
-                                                        interval=50, blit=True)
+    anim = animation.FuncAnimation(fig, animate, frames=gallerist(
+        ax, fig, q_art), interval=50, blit=True)
     tk.mainloop()
