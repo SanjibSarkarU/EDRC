@@ -176,18 +176,33 @@ def wamv_gpgll(stream):
 
 
 # ddm = degree, decimal minutes, dd = degree decimal
-def ddm2dd(coordinates):
-    """ Convert degree, decimal minutes to degree decimal; return 'Lat_dd': float(lat_dd), 'Lng_dd': float(lng_dd)}
+def ddm2dd(coordinates) -> dict:
+    """ Convert degree, decimal minutes to degree decimal; return {'Lat_dd': float, 'Lng_dd': float}
     Input Ex.:  ['3020.1186383580', 'N', '0894.5222887340', 'W'],
     return: {'Lat_dd': float(lat_dd), 'Lng_dd': float(lng_dd)} """
     lat, lat_direction, lng, lng_direction = coordinates[0], coordinates[1], coordinates[2], coordinates[3]
     lat = lat[1:] if lat.startswith('0') else lat
     lat_ddm = lat[:2] + str(float(lat[2:]) / 60)[1:]
     lat_dd = '{}'.format(lat_ddm if lat_direction == 'N' else '-' + lat_ddm)
-    lng = lng[1:] if lng.startswith('0') else lng
-    lng_ddm = lng[:2] + str(float(lng[2:]) / 60)[1:]
-    lng_dd = '{}'.format(lng_ddm if lng_direction == 'E' else '-' + lng_ddm)
+    lng = str(int(lng[:3])) + str(float(lng[3:]) / 60)[1:]
+    lng_dd = '{}'.format(lng if lng_direction == 'E' else '-' + lng)
     dd = {'Lat_dd': float(lat_dd), 'Lng_dd': float(lng_dd)}
+    return dd
+
+
+def gpglldecode(gpgllstr:str) -> dict:
+    """"Takes GPGLL string and returns degree decimal
+    input: '$GPGLL,3021.0378,N,08937.806599999999996,W,104129,A,A*6E'
+    return: {'Lat_dd': float, 'Lng_dd': float}"""
+    assert re.search("\$GPGLL", gpgllstr), 'This is not GPGLL'
+    _, lat, lat_direction, lng, lng_direction, t, status, mode = gpgllstr.split(',')
+    assert status == 'A', 'Not a valid coordinate'
+    lat = lat[1:] if lat.startswith('0') else lat
+    lat = lat[:2] + str(float(lat[2:]) / 60)[1:]
+    lat_dd = '{}'.format(lat if lat_direction == 'N' else '-' + lat)
+    lng = str(int(lng[:3])) + str(float(lng[3:]) / 60)[1:]
+    lng_dd = '{}'.format(lng if lng_direction == 'E' else '-' + lng)
+    dd = {'Lat_dd': float(lat_dd), 'Lng_dd': float(lng_dd), 'time': t}
     return dd
 
 

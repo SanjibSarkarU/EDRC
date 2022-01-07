@@ -17,15 +17,16 @@ import socket
 
 filepath = r"C:\Log_files"
 time_now = datetime.datetime.now()
-fileName = filepath + '\\' + "log-RF-AC-test" + str(time_now.year) + str(time_now.month) + str(time_now.day) + \
+fileName = filepath + '\\' + "log-IVER-WAMv" + str(time_now.year) + str(time_now.month) + str(time_now.day) + \
            str(time_now.hour) + str(time_now.minute) + ".txt"
 log_file = open(fileName, "a")
 q_log = Queue()
 
 TIMEOUT_RF = 1
 TIMEOUT_AC = 1
-rf_port = str(input('RF COMPort: '))  # 'COM2'
-ac_port = str(input('AC COMPort: '))  # 'COM5'
+rf_port, ac_port = 'com2', 'com5'
+# rf_port = str(input('RF COMPort: '))  # 'COM2'
+# ac_port = str(input('AC COMPort: '))  # 'COM5'
 
 ser_rf = serial.Serial(rf_port, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=TIMEOUT_RF, xonxoff=0)
 ser_ac = serial.Serial(ac_port, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=TIMEOUT_AC, xonxoff=0)
@@ -35,30 +36,29 @@ iver = '3089'
 send_through_rf_every = 2  # int(input('How often send OSD through RF in sec: '))
 send_through_ac_every = 25  # int(input('How often send OSD through AC in sec: '))
 
-UDP_IP = "192.168.168.3"
-UDP_PORT = 5014
+# UDP_IP = "192.168.168.3"
+# UDP_PORT = 5014
 
-# UDP_IP = 'localhost'
-# UDP_PORT = 10000
+UDP_IP = 'localhost'
+UDP_PORT = 10000
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 sock.bind((UDP_IP, UDP_PORT))
 
+
 def wamv():
-    line_artist = ta.LineArtist(q_art, label='wamv trace', c='y')
+    line_artist = ta.LineArtist(q_art, label='WAMv', c='y')
     while True:
         data, addr = sock.recvfrom(1350)  # buffer size is 1024
-        data_w_recived = data.decode()
-        print(datetime.datetime.now(), ':WAMv data received:', data_w_recived)
-        if functions.wamv_gpgll(data_w_recived) == 0:
-            data_w_recived = data_w_recived.split(',')
-            data_recived = data_w_recived[1:5]
-            coordinates_w_c = functions.ddm2dd(data_recived)
+        data = data.decode()
+        print(datetime.datetime.now(), ':WAMv data received:', data)
+        if functions.wamv_gpgll(data) == 0:
+            coordinates_w_c = functions.gpglldecode(data)
             lat_w_c = coordinates_w_c['Lat_dd']
             lng_w_c = coordinates_w_c['Lng_dd']
             line_artist.add_data_to_artist((lng_w_c, lat_w_c ))
-            q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ': WAMV: ', data_w_recived])
+            q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ': WAMV: ', data])
 
 
 def read_rf():
@@ -158,7 +158,8 @@ def send_through_ac():
 
 
 def init(ax):
-    # 'Cat_Island_Low.tif', 'Stennis_QW.tif'
+    # # 'Cat_Island_Low.tif', 'Stennis_QW.tif'
+    # data = rasterio.open('Stennis_QW.tif')
     with rasterio.open('Stennis_QW.tif', driver='GTiff') as data:
         im = show(data, ax=ax)
         print(data.profile)
