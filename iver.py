@@ -1,23 +1,22 @@
 import datetime
 import re
+import threading
 import time
+import tkinter as tk
+from collections import deque
+from queue import Queue
+from time import monotonic
 
-from matplotlib import pyplot as plt, animation
+import pandas as pd
 import rasterio
 import serial
-
-from rasterio.plot import show
-import tkinter as tk
-from tkinter import *
-import threading
 from geographiclib.geodesic import Geodesic
-from time import monotonic
+from matplotlib import pyplot as plt, animation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import functions
-from queue import Queue
-import pandas as pd
-from collections import deque
+from rasterio.plot import show
 
+import functions
+# just checking git
 rf, ac = 'COM1', 'COM4'
 # rf, ac = 'COM5', 'COM7'
 
@@ -38,32 +37,32 @@ class App(tk.Frame):
         self.q_wp_omw = Queue()
         self.send_through_rf = True
         self.send_through_ac = False
-        
+
         self.running = False
         self.ani = None
         btns = tk.Frame(self)
         btns.pack()
-        
+
         lbl = tk.Label(btns, text="update interval (ms)")
         lbl.pack(side=tk.LEFT)
-        
+
         self.interval = tk.Entry(btns, width=5)
         self.intervl = 20
         self.interval.insert(0, str(self.intervl))
         self.interval.pack(side=tk.LEFT)
-        
+
         self.btn = tk.Button(btns, text='Start', command=self.on_click)
         self.btn.pack(side=tk.LEFT)
-        
+
         self.btn_rf = tk.Button(btns, text='RF', command=self.rf)
         self.btn_rf.pack(side=tk.LEFT)
 
         self.btn_ac = tk.Button(btns, text='AC', command=self.ac)
         self.btn_ac.pack(side=tk.LEFT)
-        
+
         self.btn_exit = tk.Button(btns, text='Exit', command=quit)
         self.btn_exit.pack(side=tk.LEFT)
-        
+
         self.fig = plt.Figure()
         self.ax1 = self.fig.add_subplot(111)
         self.line_iver, = self.ax1.plot([], [], 'r-', linewidth=1.5)
@@ -85,14 +84,15 @@ class App(tk.Frame):
         #                   [30.3666, -89.1004, 5]]
         self.total_WPs = len(self.waypoints_iver)
         df = pd.DataFrame(self.waypoints_iver, columns=['lat', 'lon', 'speed'])
-        self.ax1.scatter(df['lon'], df['lat'], color='red', marker='.', s=250, linewidths=0.05) # facecolors='none', edgecolors='r',
+        self.ax1.scatter(df['lon'], df['lat'], color='red', marker='.', s=250,
+                         linewidths=0.05)  # facecolors='none', edgecolors='r',
         for i in range(len(df)):
-            self.ax1.scatter(df.lon[i], df.lat[i], marker="$"+str(i+1)+"$", color='black', linewidths=.09)
-        
+            self.ax1.scatter(df.lon[i], df.lat[i], marker="$" + str(i + 1) + "$", color='black', linewidths=.09)
+
         HISTORY_LEN = 2000000
         self.xdata = deque([], maxlen=HISTORY_LEN)
         self.ydata = deque([], maxlen=HISTORY_LEN)
-    
+
     def on_click(self):
         if self.ani is None:
             return self.start()
@@ -103,7 +103,7 @@ class App(tk.Frame):
             self.ani.event_source.start()
             self.btn.config(text='Pause')
         self.running = not self.running
-    
+
     def start(self):
         threading.Thread(target=self.iver, daemon=True).start()
         threading.Thread(target=self.read_comports, daemon=True).start()
@@ -133,7 +133,7 @@ class App(tk.Frame):
     def omw_Ack(self):
         ack = '$ACK,16,0,0*'
         return '$AC;IVER3-' + self.auv + ';' + ack + functions.check_sum(ack) + '\r\n'
-    
+
     def rf(self):
         if self.send_through_rf:
             self.send_through_rf = False
@@ -145,7 +145,7 @@ class App(tk.Frame):
             self.send_through_ac = False
             self.btn_rf.config(text='RF-on')
             self.btn_ac.config(text='AC-stop')
-    
+
     def ac(self):
         if self.send_through_ac:
             self.send_through_ac = False
@@ -195,7 +195,7 @@ class App(tk.Frame):
                             print('OMW_CLEAR')
                             break
                         g_i_r = l_i_r.Position(omw_dstnce_travld, Geodesic.STANDARD | Geodesic.LONG_UNROLL)
-                        lat_i_r, lng_i_r = g_i_r['lat2'],  g_i_r['lon2']
+                        lat_i_r, lng_i_r = g_i_r['lat2'], g_i_r['lon2']
                         self.current_position_iver = {'Latitude': lat_i_r, 'Longitude': lng_i_r, 'speed': speed_i_r}
                         # self.q_plot.put(self.current_position_iver)
                         t_elapsed_r = monotonic() - t_start_r
@@ -212,7 +212,9 @@ class App(tk.Frame):
                 lat_i_past, lng_i_past = self.current_position_iver['Latitude'], self.current_position_iver['Longitude']
             self.waypoints_iver.pop(0)
             remaining_WPs = self.total_WPs - len(self.waypoints_iver)
-            print(datetime.datetime.now(), ': Total WPs: {}, remaining WPs: {}/{}'.format(self.total_WPs, len(self.waypoints_iver), remaining_WPs))
+            print(datetime.datetime.now(),
+                  ': Total WPs: {}, remaining WPs: {}/{}'.format(self.total_WPs, len(self.waypoints_iver),
+                                                                 remaining_WPs))
             self.wp_nxt = str(remaining_WPs)
             print(datetime.datetime.now(), ': nxt_WP: ', self.wp_nxt)
 
@@ -220,7 +222,8 @@ class App(tk.Frame):
         while True:
             # print('Status: RF: {}, AC {}'.format(self.send_through_rf, self.send_through_ac))
             try:
-                if (self.send_through_rf and ser_rf.inWaiting() > 0) or (self.send_through_ac and ser_ac.inWaiting() > 0):
+                if (self.send_through_rf and ser_rf.inWaiting() > 0) or (
+                        self.send_through_ac and ser_ac.inWaiting() > 0):
                     received_data_through = 'RF' if ser_rf.inWaiting() > 0 else 'AC'
                     read_com = ser_rf.readline().decode().strip() if received_data_through == 'RF' else ser_ac.readline().decode().strip()
                     print(datetime.datetime.now(), ':received through: ', received_data_through, read_com)
@@ -229,12 +232,15 @@ class App(tk.Frame):
                         print(datetime.datetime.now(), ": Sending current Status through : ", received_data_through)
                         ser_rf.write(self.iver_status().encode()) if received_data_through == 'RF' else ser_ac.write(
                             self.iver_status().encode())
-                        ser_rf.write(self.osd_ACK().encode()) if received_data_through == 'RF' else ser_ac.write(self.osd_ACK().encode())
+                        ser_rf.write(self.osd_ACK().encode()) if received_data_through == 'RF' else ser_ac.write(
+                            self.osd_ACK().encode())
                         # print("Time write:{} sec".format(time.perf_counter() - toc_CS))
                     elif functions.received_stream(read_com) == 'omw' and functions.omw_req_recvd(read_com) == 0:
                         omw_rec = read_com.split(";")[2].split(',')
-                        ser_rf.write(self.omw_Ack().encode()) if received_data_through == 'RF' else ser_ac.write(self.omw_Ack().encode())
-                        print(datetime.datetime.now(), ': Sending OMW acknowledgement through :', received_data_through, self.omw_Ack())
+                        ser_rf.write(self.omw_Ack().encode()) if received_data_through == 'RF' else ser_ac.write(
+                            self.omw_Ack().encode())
+                        print(datetime.datetime.now(), ': Sending OMW acknowledgement through :', received_data_through,
+                              self.omw_Ack())
                         if re.search('CLEAR', read_com):
                             self.q_wp_omw.queue.clear()
                             self.omw_clear = True
@@ -248,7 +254,7 @@ class App(tk.Frame):
             except Exception as e:
                 print(" Exception raised", e)
                 continue
-                
+
     def update_graph(self, i):
         self.event_plot.wait()
         self.xdata.append(self.current_position_iver['Longitude'])
@@ -259,7 +265,7 @@ class App(tk.Frame):
         # ax.plot([lng_i_p, current_position_iver['Longitude']], [lat_i_p, current_position_iver['Latitude']], 'r') if \
         #     lat_i_p != 0.0 else ax.plot(plot_inbox['Longitude'], plot_inbox['Latitude'], 'r')
         # lat_i_p, lng_i_p = current_position_iver['Latitude'], current_position_iver['Longitude']
-        
+
         self.line_iver.set_data(self.xdata, self.ydata)
         return self.line_iver,
 

@@ -1,20 +1,15 @@
 # EDRC
 
 https://stackoverflow.com/questions/43477681/how-to-speed-up-tkinter-embedded-matplot-lib-and-python
-import Tkinter as tk
-import serial
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-from matplotlib import pyplot as plt
-import matplotlib.animation as animation
-from collections import deque
-import random
+import Tkinter as tk import serial from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg from
+matplotlib.figure import Figure from matplotlib import pyplot as plt import matplotlib.animation as animation from
+collections import deque import random
 
 HISTORY_LEN = 200
 
 class App(tk.Frame):
-    def __init__(self, master=None, **kwargs):
-        tk.Frame.__init__(self, master, **kwargs)
+def __init__(self, master=None, **kwargs):
+tk.Frame.__init__(self, master, **kwargs)
 
         self.running = False
         self.ani = None
@@ -88,10 +83,10 @@ class App(tk.Frame):
         return self.line,
 
 def main():
-    root = tk.Tk()
-    app = App(root)
-    app.pack()
-    root.mainloop()
+root = tk.Tk()
+app = App(root)
+app.pack()
+root.mainloop()
 
 if __name__ == '__main__':
-    main()
+main()
