@@ -194,12 +194,12 @@ def gpglldecode(gpgllstr:str) -> dict:
     """"Takes GPGLL string and returns degree decimal
     input: '$GPGLL,3021.0378,N,08937.806599999999996,W,104129,A,A*6E'
     return: {'Lat_dd': float, 'Lng_dd': float}"""
-    assert re.search("\$GPGLL", gpgllstr), 'This is not GPGLL'
+    assert re.search("\$GPGLL", gpgllstr), 'Input:String is not This is not GPGLL'
     _, lat, lat_direction, lng, lng_direction, t, status, mode = gpgllstr.split(',')
     assert status == 'A', 'Not a valid coordinate'
-    lat = lat[1:] if lat.startswith('0') else lat
-    lat = lat[:2] + str(float(lat[2:]) / 60)[1:]
-    lat_dd = '{}'.format(lat if lat_direction == 'N' else '-' + lat)
+    # lat = lat[1:] if lat.startswith('0') else lat
+    lat_dd = float(lat[:2]) + float(lat[2:]) / 60
+    lat_dd = lat_dd if lat_direction == 'N' else -1*lat_dd
     lng = str(int(lng[:3])) + str(float(lng[3:]) / 60)[1:]
     lng_dd = '{}'.format(lng if lng_direction == 'E' else '-' + lng)
     dd = {'Lat_dd': float(lat_dd), 'Lng_dd': float(lng_dd), 'time': t}
