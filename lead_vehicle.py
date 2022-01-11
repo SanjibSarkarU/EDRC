@@ -1,17 +1,15 @@
-import socket
-from collections import deque
-import rasterio
+import threading
+import time
+import tkinter as tk
+from queue import Queue
+
+import pandas as pd
 from matplotlib import pyplot as plt, animation
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
-from rasterio.plot import show
-import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import pandas as pd
-import functions
+
 import threadartists as ta
-import time
-import threading
-from queue import Queue
+
 HISTORY_LEN = 200000
 
 
@@ -47,14 +45,12 @@ def lead():
         time.sleep(0.5)
 
 
-
 def _quit():
     root.quit()  # stops mainloop
     root.destroy()
 
 
 if __name__ == '__main__':
-
     q_art = Queue(maxsize=0)
     root = tk.Tk()
     root.wm_title("Lead Vehicle")
@@ -79,9 +75,6 @@ if __name__ == '__main__':
                                    interval=1000, blit=True, repeat=False)
 
     tk.mainloop()
-
-
-
 
 # # ****************************************** OLD VERSION**********************************
 # class App(tk.Frame):
@@ -191,4 +184,3 @@ if __name__ == '__main__':
 #
 # if __name__ == '__main__':
 #     main()
-

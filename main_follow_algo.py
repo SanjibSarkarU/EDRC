@@ -1,27 +1,28 @@
 import datetime
 import re
 import socket
-# import winsound
-from collections import deque
-import matplotlib.pyplot as plt
-import rasterio
-import serial
-# from matplotlib.backends._backend_tk import NavigationToolbar2Tk
-from matplotlib import animation
-from rasterio.plot import show
-# import datetime as dt
-import tkinter as tk
 import threading
 # from tkinter import *
 # from threading import Event
 import time
+# import datetime as dt
+import tkinter as tk
+# import winsound
+from collections import deque
+from queue import Queue
+from time import monotonic
+
+import matplotlib.pyplot as plt
+import rasterio
+import serial
+from geographiclib.geodesic import Geodesic
+# from matplotlib.backends._backend_tk import NavigationToolbar2Tk
+from matplotlib import animation
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from rasterio.plot import show
+
 # import geopy.distance
 import functions
-from time import monotonic
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from queue import Queue
-import pandas as pd
-from geographiclib.geodesic import Geodesic
 
 HISTORY_LEN = 20000
 # ............Read UDP port to collect WAM-V data.................
@@ -45,7 +46,7 @@ iver = '3089'
 class App(tk.Frame):
     def __init__(self, master=None, **kwargs):
         tk.Frame.__init__(self, master, **kwargs)
-        
+
         self.running = False
         self.ani = None
         self.q_plot, self.q_iver_comm, self.q_lead, self.q_log = Queue(), Queue(), Queue(), Queue()
@@ -55,7 +56,7 @@ class App(tk.Frame):
         self.xdata_iver, self.ydata_iver = deque([], maxlen=HISTORY_LEN), deque([], maxlen=HISTORY_LEN)
         self.x_simulation, self.y_simulation = deque([], maxlen=HISTORY_LEN), deque([], maxlen=HISTORY_LEN)
         self.x_p, self.y_p = deque([], maxlen=HISTORY_LEN), deque([], maxlen=HISTORY_LEN)
-        
+
         self.allowed_discrepancy = 17
         self.send_through_RF_every = 8
         self.send_through_ac_every = 15
@@ -64,29 +65,29 @@ class App(tk.Frame):
         self.inst_snd = None
         btns = tk.Frame(self)
         btns.pack()
-        
+
         lbl = tk.Label(btns, text="update interval (ms)")
         lbl.pack(side=tk.LEFT)
-        
+
         self.interval = tk.Entry(btns, width=5)
         self.interval.insert(0, '50')
         self.interval.pack(side=tk.LEFT)
-        
+
         self.btn = tk.Button(btns, text='Start', command=self.on_click)
         self.btn.pack(side=tk.LEFT)
-        
+
         self.btn_exit = tk.Button(btns, text='Exit', command=quit)
         self.btn_exit.pack(side=tk.LEFT)
-        
+
         self.fig = plt.Figure()
         self.ax1 = self.fig.add_subplot(111)
         line_width = 0.9
         self.line_lead, = self.ax1.plot([], [], 'k-', lw=line_width)
         self.line_iver, = self.ax1.plot([], [], 'r-', lw=line_width)
         self.scatter_prdctd, = self.ax1.plot([], [], '*', color='lavender', lw=.5)
-        self.line_simulation, = self.ax1.plot([], [], '--', color='yellow', lw=line_width)   #  'fuchsia'
+        self.line_simulation, = self.ax1.plot([], [], '--', color='yellow', lw=line_width)  # 'fuchsia'
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
-        
+
         img = rasterio.open('Stennis_QW.tif')  # 'Cat_Island_Low.tif', 'Stennis_QW.tif'
         x = show(img, ax=self.ax1)
         self.canvas.get_tk_widget().pack(expand=True)
@@ -95,7 +96,7 @@ class App(tk.Frame):
         # self.ax1.scatter(df['lon'], df['lat'], c="red", marker="X", linewidths=0.15)
 
         # threading.Thread(target=self.lead_vehicle_communication, daemon=True).start()
-       
+
     def on_click(self):
         if self.ani is None:
             return self.start()
@@ -106,14 +107,14 @@ class App(tk.Frame):
             self.ani.event_source.start()
             self.btn.config(text='Pause')
         self.running = not self.running
-    
+
     def start(self):
         threading.Thread(target=self.lead_vehicle_communication, daemon=True).start()
         threading.Thread(target=self.iver_communication, daemon=True).start()
         threading.Thread(target=self.brain, daemon=True).start()
         threading.Thread(target=self.iver_simulation, daemon=True).start()
         # threading.Thread(target=self.send_through_ac, daemon=True).start()
-        
+
         self.ani = animation.FuncAnimation(
             self.fig,
             self.update_graph,
@@ -124,7 +125,7 @@ class App(tk.Frame):
         self.running = True
         self.btn.config(text='Pause')
         self.ani._start()
-    
+
     def lead_vehicle_communication(self):
         """ Chase/Lead vehicle data  """
         # print(datetime.datetime.now(), ': Chase vehicle data')
@@ -136,7 +137,7 @@ class App(tk.Frame):
                 data_w_recived = data_w_recived.split(',')
                 data_recived = data_w_recived[1:5]
                 coordinates_w_c = functions.ddm2dd(data_recived)
-                time_stamp_w = data_w_recived[5].split('.')[0] if re.search('.', data_w_recived[5]) else data_w_recived[
+                time_stamp_w = data_w_recived[5].split('.')[0] if re.search('', data_w_recived[5]) else data_w_recived[
                     5]
                 lat_w_c = coordinates_w_c['Lat_dd']
                 lng_w_c = coordinates_w_c['Lng_dd']
@@ -152,7 +153,7 @@ class App(tk.Frame):
         inst_snd = '$AC;Iver3-' + iver + ';' + '$' + functions.osd() + '\r\n'
         ser_rf.reset_output_buffer()
         ser_rf.write(inst_snd.encode())
-        print(datetime.datetime.now(), ': Sending through RF: ',)
+        print(datetime.datetime.now(), ': Sending through RF: ', )
         # self.q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ': send trough RF: '])
 
     def send_through_ac(self):
@@ -184,7 +185,9 @@ class App(tk.Frame):
                     lst_omw.append(q_read)
                 else:
                     print('Warning!! Not know keyword')
-            print(datetime.datetime.now(), 'Eof the queue, length of the lst_omw {}, lst_osd {} ,snd flag {}'.format(len(lst_omw), len(lst_osd), send_flag))
+            print(datetime.datetime.now(),
+                  'Eof the queue, length of the lst_omw {}, lst_osd {} ,snd flag {}'.format(len(lst_omw), len(lst_osd),
+                                                                                            send_flag))
             if len(lst_omw) > 0 and len(lst_osd) < 3 and send_flag is None:
                 # '$AC;Iver3-3089;$OMW,CLEAR,30.35197,-89.62897,0.0,,10,4.0,0, *cc'
                 omw_send = lst_omw[-1]
@@ -195,20 +198,21 @@ class App(tk.Frame):
                     'OMW,CLEAR,' + str(omw_send['lat']) + ',' + str(omw_send['lon']) + ',0.0,,10,' + \
                     str(omw_send['speed']) + ',0, *'
                 self.inst_snd = '$AC;Iver3-' + iver + ';' + '$' + ins_omw + functions.check_sum(ins_omw) + '\r\n'
-                
+
             elif len(lst_osd) > 0 and send_flag is None:
                 # lst_osd.pop(-1)
                 self.inst_snd = '$AC;Iver3-' + iver + ';' + '$' + functions.osd() + '\r\n'
-                
+
             if self.inst_snd is not None and (len(lst_osd) > 0 or len(lst_omw) > 0):
                 # print('i am here')
                 ser_rf.write(self.inst_snd.encode())
                 print(datetime.datetime.now(), ': Sending through RF.', self.inst_snd.encode())
                 send_flag = 'sending through RF'
-                lst_omw.clear() if re.search('OMW', self.inst_snd) else lst_osd.clear() if re.search('OSD', self.inst_snd) else ''
+                lst_omw.clear() if re.search('OMW', self.inst_snd) else lst_osd.clear() if re.search('OSD',
+                                                                                                     self.inst_snd) else ''
                 self.q_log.put({'Time': datetime.datetime.now().strftime("%H:%M:%S.%f"), 'info': 'OMW' if re.search(
                     'OMW', self.inst_snd) else 'OSD', 'key': 'sending through RF'})
-                
+
             read_rf = ser_rf.readline().decode()
             read_ac = ser_ac.readline().decode()
             try:
@@ -220,14 +224,14 @@ class App(tk.Frame):
                         send_flag = None
                         osi_return = functions.osi(read_rf)
                         self.q_iverupdate_sim_IC.put({'lat': osi_return['Latitude'], 'lon': osi_return['Longitude'],
-                                        'speed': osi_return['Speed'], 'key': 'updatedPositionFromIC'})
+                                                      'speed': osi_return['Speed'], 'key': 'updatedPositionFromIC'})
                         print(datetime.datetime.now(), ': RF:', osi_return)
                         self.q_plot.put({'lat': osi_return['Latitude'], 'lon': osi_return['Longitude'], 'key': 'iver',
                                          'color': 'r'})
                         self.event_iver.set()  # not required, event should be set by the iver simulation thread
                         self.q_log.put(
                             {'Time': datetime.datetime.now().strftime("%H:%M:%S.%f"), 'lat': osi_return['Latitude'],
-                             'lon' : osi_return['Longitude'], 'key': 'iverPosition'})
+                             'lon': osi_return['Longitude'], 'key': 'iverPosition'})
                     elif functions.received_stream(read_rf) == 'osdAck' and functions.osd_ack(read_rf) == 0:
                         # send_flag = None
                         print(datetime.datetime.now(), ': OSD Acknowledgement from the IVER')
@@ -243,7 +247,7 @@ class App(tk.Frame):
                         osi_return = functions.osi(read_rf)
                         # self.latlng_iver.append([osi_return['Latitude'], osi_return['Longitude'], osi_return['Speed']])
                         self.q_iverupdate_sim_IC.put({'lat': osi_return['Latitude'], 'lon': osi_return['Longitude'],
-                                        'speed': osi_return['Speed'], 'key': 'updatedPositionFromIC'})
+                                                      'speed': osi_return['Speed'], 'key': 'updatedPositionFromIC'})
                         print(datetime.datetime.now(), ': AC:', osi_return)
                         self.q_plot.put({'lat': osi_return['Latitude'], 'lon': osi_return['Longitude'], 'key': 'iver',
                                          'color': 'r'})
@@ -254,13 +258,14 @@ class App(tk.Frame):
                     elif functions.received_stream(read_ac) == 'omwAck':
                         send_flag, AC_flag = None, False
                         print(datetime.datetime.now(),
-                              ': OMW acknowledged through AC' if functions.omw_ack(read_rf) == 0 else ('Error: ', read_rf))
+                              ': OMW acknowledged through AC' if functions.omw_ack(read_rf) == 0 else (
+                              'Error: ', read_rf))
                 elif AC_flag:
                     if monotonic() - send_through_AC_time_start > send_through_AC_wait:
                         print(datetime.datetime.now(), ': wait time is over, AC, was not successful')
                         AC_flag = False
                         send_flag = None
-                        
+
                 if send_flag is not None and not AC_flag and self.inst_snd is not None:
                     print('i am at AC, ', send_flag, 'AC_flase status: ', AC_flag)
                     ser_rf.write(self.inst_snd.encode())
@@ -273,7 +278,7 @@ class App(tk.Frame):
                 ser_rf.reset_input_buffer()
                 ser_ac.reset_input_buffer()
                 continue
-     
+
     def predictLoc(self, lat, lon, ha, speed, timetopredict, behind=0):
         """predict the location at the time specified from the current location,
         takes time as a datetime object python"""
@@ -285,7 +290,7 @@ class App(tk.Frame):
             t = (timetopredict - datetime.datetime.now()).total_seconds()
             predicted_p = self.geod.Direct(float(lat), float(lon), azi1=ha, s12=(t * speed) - behind)
             return {'lat': predicted_p['lat2'], 'lon': predicted_p['lon2']}
-    
+
     def brain(self):
         """ Main Brain """
         latlng_lead = []
@@ -317,7 +322,7 @@ class App(tk.Frame):
                     # calculating the desire speed of the chase vehicle
                     iver_current_pos = self.current_position_iver
                     disGoalCurrIver = self.geod.Inverse(iver_current_pos['Latitude'], iver_current_pos['Longitude'],
-                                                   iver_target['lat'], iver_target['lon'])['s12']
+                                                        iver_target['lat'], iver_target['lon'])['s12']
                     desire_speed = (disGoalCurrIver / PREDICT_AFTER_SEC) * 0.514  # knots
                     # print(datetime.datetime.now(), ': Distance between goal and current position of the IVER: {}, '
                     #                                'Desire Speed: {} knots'.format(disGoalCurrIver, desire_speed))
@@ -329,7 +334,7 @@ class App(tk.Frame):
                     if omw_clear_flag:
                         self.q_wp_omw_simu.queue.clear()
                     self.q_wp_omw_simu.put({'lat': iver_target['lat'],
-                                          'lon': iver_target['lon'], 'speed': desire_speed})
+                                            'lon': iver_target['lon'], 'speed': desire_speed})
                     update_goal_loc_follower = False
                     omw_clear_flag = False
                 dis_goal_target = self.geod.Inverse(iver_target['lat'], iver_target['lon'],
@@ -349,7 +354,7 @@ class App(tk.Frame):
                                                                 iver_current_pos['Latitude'],
                                                                 iver_current_pos['Longitude'])['s12']
                     dis_current_predicted_lead = self.geod.Inverse(leadV_predict_p['lat'], leadV_predict_p['lon'],
-                                                              latlng_lead[-1][0], latlng_lead[-1][1])['s12']
+                                                                   latlng_lead[-1][0], latlng_lead[-1][1])['s12']
                     # print(datetime.datetime.now(), ": Distance between current and Target:", dis_current_target)
                     MIN_DIS_TARGET = 10
                     if 0 < dis_current_target_iver < MIN_DIS_TARGET or dis_current_predicted_lead < self.allowed_discrepancy + BEHIND:
@@ -357,15 +362,15 @@ class App(tk.Frame):
                         predictAtTime = datetime.datetime.now() + datetime.timedelta(seconds=PREDICT_AFTER_SEC)
                 loop += 1
             comm_time = monotonic()
-    
+
     def log_data(self):
         log_inbox = self.q_log.get()
         # write on a text file from log_inbox
-        
+
     def key_priority(self, key='default', priority=0):
         self.key = key
         self.priority = priority
-        
+
     def iver_simulation(self):
         # self.q_iverupdate_sim_IC.put({'lat': osi_return['Latitude'], 'lon': osi_return['Longitude'],
         #                                         'speed': osi_return['Speed'], 'key': 'updatedPositionFromIC'})
@@ -386,7 +391,7 @@ class App(tk.Frame):
             l = self.geod.Inverse(lat_i_past, lng_i_past, lat_i_nxt, lng_i_nxt)
             azi1 = l['azi2']
             time.sleep(0.15)
-            m = self.geod.Direct(lat_i_past, lng_i_past, azi1=azi1, s12=(monotonic()-t_start)*speed_i)
+            m = self.geod.Direct(lat_i_past, lng_i_past, azi1=azi1, s12=(monotonic() - t_start) * speed_i)
             self.current_position_iver = {'Latitude': m['lat2'], 'Longitude': m['lon2'], 'speed': speed_i}
             self.q_plot.put({'lat': self.current_position_iver['Latitude'],
                              'lon': self.current_position_iver['Longitude'], 'key': 'simulation', 'color': 'y'})
@@ -396,12 +401,12 @@ class App(tk.Frame):
                                               'Longitude': updated_iver_pos['lon'],
                                               'speed': updated_iver_pos['speed']}
             lat_i_past, lng_i_past = self.current_position_iver['Latitude'], self.current_position_iver['Longitude']
-    
+
     def update_iver_position(self):
         called_every_insec = 20
         threading.Timer(called_every_insec, self.update_iver_position).start()
         self.q_iver_comm.put({'Time:': datetime.datetime.now, 'key': 'osd'})
-            
+
     def update_graph(self, i):
         # Data inside queue: enum datatype
         plot_inbox = self.q_plot.get()
@@ -423,12 +428,12 @@ class App(tk.Frame):
             self.x_simulation.append(plot_inbox['lon'])
             self.y_simulation.append(plot_inbox['lat'])
             self.line_simulation.set_data(self.x_simulation, self.y_simulation)
-            
+
         # if plot_inbox['key'] == 'out':
         #     self.xdata.append(plot_inbox['lon'])
         #     self.ydata.append(plot_inbox['lat'])
         #     self.line_lead.set_data(self.xdata, self.ydata)
-        
+
         return self.line_lead, self.line_iver, self.scatter_prdctd, self.line_simulation,
 
 

@@ -1,19 +1,19 @@
 """ Read com ports RF and AC"""
-import threading
 import datetime
+import socket
+import threading
 import tkinter as tk
-from rasterio.plot import show
+from queue import Queue
+
+import matplotlib.pyplot as plt
 import rasterio
 import serial
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib import animation
-import matplotlib.pyplot as plt
-from queue import Queue
-import threadartists as ta
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from rasterio.plot import show
+
 import functions
-import socket
-
-
+import threadartists as ta
 
 filepath = r"C:\Log_files"
 time_now = datetime.datetime.now()
@@ -57,7 +57,7 @@ def wamv():
             coordinates_w_c = functions.gpglldecode(data)
             lat_w_c = coordinates_w_c['Lat_dd']
             lng_w_c = coordinates_w_c['Lng_dd']
-            line_artist.add_data_to_artist((lng_w_c, lat_w_c ))
+            line_artist.add_data_to_artist((lng_w_c, lat_w_c))
             q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ': WAMV: ', data])
 
 
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     threading.Thread(target=read_rf, daemon=True).start()
     threading.Thread(target=read_ac, daemon=True).start()
     threading.Thread(target=log_data, daemon=True).start()
-    threading.Thread(target=wamv, daemon =True).start()
+    threading.Thread(target=wamv, daemon=True).start()
 
     anim = animation.FuncAnimation(fig, ta.animate, frames=ta.artist_manager(ax, fig, q_art),
                                    init_func=lambda: init(ax), interval=50, blit=True, repeat=True)

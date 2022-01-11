@@ -8,17 +8,18 @@ __maintainer__ = 'Sanjib Sarkar'
 __email__ = 'sanjib.sarkar@usm.edu'
 __status__ = 'Prototype'
 
-from time import monotonic
-import time
-import geopy.distance
-import serial
-import pandas as pd
-import numpy as np
 import re
+import time
 import warnings
-from geographiclib.geodesic import Geodesic
+from time import monotonic
+
+import geopy.distance
+import numpy as np
 import numpy.polynomial.polynomial as poly
+import pandas as pd
 import pymap3d as pm
+import serial
+from geographiclib.geodesic import Geodesic
 from scipy import stats
 
 
@@ -69,7 +70,7 @@ def omw_ack(stream):
             # print(stream)
             print('The IVER has raised an error to execute the OMW command')
             return 1
-    
+
     else:
         print('wrong checksum')
         print('Received checkSum: ' + rec_chksm + 'Calculated checkSum: ' + cal_chksm)
@@ -140,7 +141,7 @@ def osd_ack(stream: str):
         else:
             print('The IVER has raised an error to execute the OSD command')
             return 1
-    
+
     else:
         print('wrong checksum')
         print('Received checkSum: ' + rec_chksm + 'Calculated checkSum: ' + cal_chksm)
@@ -190,7 +191,7 @@ def ddm2dd(coordinates) -> dict:
     return dd
 
 
-def gpglldecode(gpgllstr:str) -> dict:
+def gpglldecode(gpgllstr: str) -> dict:
     """"Takes GPGLL string and returns degree decimal
     input: '$GPGLL,3021.0378,N,08937.806599999999996,W,104129,A,A*6E'
     return: {'Lat_dd': float, 'Lng_dd': float}"""
@@ -199,7 +200,7 @@ def gpglldecode(gpgllstr:str) -> dict:
     assert status == 'A', 'Not a valid coordinate'
     # lat = lat[1:] if lat.startswith('0') else lat
     lat_dd = float(lat[:2]) + float(lat[2:]) / 60
-    lat_dd = lat_dd if lat_direction == 'N' else -1*lat_dd
+    lat_dd = lat_dd if lat_direction == 'N' else -1 * lat_dd
     lng = str(int(lng[:3])) + str(float(lng[3:]) / 60)[1:]
     lng_dd = '{}'.format(lng if lng_direction == 'E' else '-' + lng)
     dd = {'Lat_dd': float(lat_dd), 'Lng_dd': float(lng_dd), 'time': t}
@@ -287,12 +288,12 @@ def haSpeed_ply(df):
     model_ha = np.poly1d(np.polyfit(x, np_ha, deg=deg))
     line_speed = np.linspace(x[0], x[-1], num=len(x) * 10)
     predict_ha = model_ha(len(np_ha))
-    
+
     x = np.linspace(0, len(np_speed), len(np_speed))
     model_speed = np.poly1d(np.polyfit(x, np_speed, deg=deg))
     line_speed = np.linspace(x[0], x[-1], num=len(x) * 10)
     p_speed = model_speed(len(np_speed))
-    
+
     coefs = poly.polyfit(x, np_speed, 4)
     x_new = np.linspace(x[0], x[-1], num=len(x) * 10)
     ffit = poly.polyval(x_new, coefs)
@@ -322,7 +323,7 @@ def coordinate_fit(df, deg=1):
     # df['Azm'] = Az
     m, n = df['x_c'], df['y_c']
     p1, p2 = np.array([df.x_c[0], df.y_c[0]]), np.array([df.x_c[len(df.x_c) - 1], df.y_c[len(df.x_c) - 1]])
-    
+
     ' Apply linear regression'
     slope, intercept, r_value, p_value, std_err = stats.linregress(m, n)
     line = list(map(lambda b: intercept + slope * b, m))
@@ -420,7 +421,7 @@ def iver_status(iver='3089', port_rf='com7', port_ac='com4', time_out=1, time_wa
                 ser_rf.reset_input_buffer()
                 ser_ac.reset_input_buffer()
                 continue
-        
+
         return osi_return
     except Exception as iverStatus:
         return osi_return

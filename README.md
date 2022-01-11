@@ -93,3 +93,5 @@ main()
 
 # tkinter Frame
 https://stackoverflow.com/questions/45122244/having-frames-next-to-each-other-in-tkinter/45123029
+
+https://stackoverflow.com/questions/36506152/tkinter-grid-or-pack-inside-a-grid
