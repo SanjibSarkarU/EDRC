@@ -1,8 +1,9 @@
 import tkinter as tk
+from tkinter import ttk
 
 
 class AVSPGUI(tk.Frame):
-    def __init__(self, master=None, **kwargs):
+    def __init__(self, master, **kwargs):
         tk.Frame.__init__(self, master, **kwargs)
         self.root = master
 
@@ -28,15 +29,20 @@ class AVSPGUI(tk.Frame):
 
 
         # # Frames
-        self.frame_menu = tk.Frame(self.root, height=400, width=600, borderwidth=5, relief=tk.RIDGE, background='gray20')
-        self.frame_menu.pack(side=tk.LEFT, anchor='nw',  fill="both", expand=True)
+        self.frame_image = tk.Frame(self.root, height=800, width=600, borderwidth=5, relief=tk.RIDGE, background='gray20')
+        self.frame_image.pack(side=tk.LEFT, anchor='nw', fill="both", expand=True)
 
-        self.frame_info = tk.Frame(self.root, height=400, width=200)
+        self.frame_info = tk.Frame(self.root, height=400, width=200, borderwidth=5, relief=tk.RIDGE)
         self.frame_info.configure(background='gray20')
-        self.frame_info.pack(side=tk.RIGHT, anchor='ne', fill="both", expand=True)
+        self.frame_info.pack(side=tk.RIGHT, anchor='ne', fill="x", expand=False)
 
-        self.frame_bottom = tk.Frame(self.root)
-        self.frame_info.pack(side=tk.BOTTOM, anchor='s', fill="both", expand=True)
+        # self.frame_bottom = tk.Frame(self.root, height=100, width=800)
+        # self.frame_bottom.pack(side=tk.BOTTOM, anchor='s', fill="both", expand=True)
+
+        # track_tab = ttk.Notebook(self.frame_info)
+        # track_tab.pack(fill='both', expand=True)
+        # self.frame_info.pack(side=tk.RIGHT, anchor='ne', fill="x", expand=False)
+
 
 
 def main():
