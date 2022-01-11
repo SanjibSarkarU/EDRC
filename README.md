@@ -90,3 +90,6 @@ root.mainloop()
 
 if __name__ == '__main__':
 main()
+
+# tkinter Frame
+https://stackoverflow.com/questions/45122244/having-frames-next-to-each-other-in-tkinter/45123029
