@@ -1,46 +1,58 @@
 import tkinter as tk
 
-root = tk.Tk()
-root.title('SVP')
-root.geometry('800x600')
-root.configure(bg= 'Black')
 
-# # Create a menu item
-menubar = tk.Menu(root)
-root.config(menu=menubar)
-file_menu = tk.Menu(menubar)
-menubar.add_cascade(label='File', menu=file_menu)
-file_menu.add_command(label='New')
-file_menu.add_command(label='Exit', command=root.quit)
+class AVSPGUI(tk.Frame):
+    def __init__(self, master=None, **kwargs):
+        tk.Frame.__init__(self, master, **kwargs)
+        self.root = master
 
-# # Create an edit menu item
-map_menu = tk.Menu(menubar)
-menubar.add_cascade(label='Map', menu=map_menu)
-map_menu.add_command(label='AddMap')
+        # # Create a menu item
+        self.menubar = tk.Menu(self.root)
+        self.root.config(menu=self.menubar)
 
-# # Create a help menu item
-help_menu = tk.Menu(menubar)
-menubar.add_cascade(label='Help', menu=help_menu)
-help_menu.add_command(label='info')
+        self.file_menu = tk.Menu(self.menubar)
+        self.menubar.add_cascade(label='File', menu=self.file_menu)
+        self.file_menu.add_command(label='New')
+        self.file_menu.add_command(label='Edit')
+        self.file_menu.add_command(label='Exit', command=self.root.quit)
 
-# # Frames
-frames = tk.Frame(root)
-frames.grid()
+        # # Create an edit menu item
+        self.map_menu = tk.Menu(self.menubar)
+        self.menubar.add_cascade(label='Map', menu=self.map_menu)
+        self.map_menu.add_command(label='AddMap')
 
-frame_menu = tk.LabelFrame(frames, borderwidth=5, relief=tk.RIDGE, background='gray20')
-# frame_menu.pack(side=tk.LEFT, anchor='ne')
-frame_menu.grid(row=0, column=0, sticky=tk.E + tk.W)
-frame_menu.columnconfigure(0, weight=1)
-tk.Label(frame_menu, text='frame1').grid(row=0, column=0, sticky='ew')
+        # # Create a help menu itemself
+        self.help_menu = tk.Menu(self.menubar)
+        self.menubar.add_cascade(label='Help', menu=self.help_menu)
+        self.help_menu.add_command(label='info')
 
-frame_info = tk.Frame(frames)
-frame_info.columnconfigure(0, weight=1)
-# frame_info.configure(background='gray20')
-# frame_info.pack(side=tk.RIGHT, anchor='ne')
-frame_info.grid(row=0, column=1, sticky='NSEW')
-tk.Label(frame_info, text='Frame2').grid(row=0, column=1, sticky='ew')
 
-root.mainloop()
+        # # Frames
+        self.frame_menu = tk.Frame(self.root, height=400, width=600, borderwidth=5, relief=tk.RIDGE, background='gray20')
+        self.frame_menu.pack(side=tk.LEFT, anchor='nw',  fill="both", expand=True)
+
+        self.frame_info = tk.Frame(self.root, height=400, width=200)
+        self.frame_info.configure(background='gray20')
+        self.frame_info.pack(side=tk.RIGHT, anchor='ne', fill="both", expand=True)
+
+        self.frame_bottom = tk.Frame(self.root)
+        self.frame_info.pack(side=tk.BOTTOM, anchor='s', fill="both", expand=True)
+
+
+def main():
+    root = tk.Tk()
+    root.geometry('800x600')
+    root.configure(bg='Black')
+    root.title('AVSPGUI')
+    root.iconbitmap('usm.ico')
+    app = AVSPGUI(root)
+    app.pack()
+    root.mainloop()
+
+
+if __name__ == '__main__':
+    main()
+
 # # label
 # root.columnconfigure(1, weight=1)
 # root.rowconfigure(2, weight=1)
