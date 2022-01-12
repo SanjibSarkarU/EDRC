@@ -207,20 +207,21 @@ def gpglldecode(gpgllstr: str) -> dict:
     return dd
 
 
-def dd2ddm(coordinates):
+def dd2ddm(coordinates) -> dict:
     """ Convert degree decimal to degree decimal minute;
-     return: {'Lat_ddm': lat_ddm, 'N_S': 'S' if lat_sign else 'N',
-           'Lng_ddm': lng_ddm, 'E_W': 'W' if lng_sign else 'E'}"""
+    input : (30.2601201714, -89.0815827171)
+    return: {'Lat_ddm': lat_ddm, 'N_S': 'S' or 'N',
+           'Lng_ddm': lng_ddm, 'E_W': 'W' or 'E'}"""
     lat, lng = str(coordinates[0]), str(coordinates[1])
-    lat_sign = lat.startswith('-')
+    is_lat_negative = lat.startswith('-')
     lat = '{}'.format(lat[1:] if lat.startswith('-') else lat)
-    lat_ddm = lat[:2] + str(float(lat[2:]) * 60)
-    lng_sign = lng.startswith('-')
+    lat_ddm = lat[:2] + (str(float(lat[2:]) * 60))
+    is_lng_negative = lng.startswith('-')
     lng = '{}'.format(lng[1:] if lng.startswith('-') else lng)
-    lng_ddm = lng[:2] + str(float(lng[2:]) * 60)
+    lng_ddm = str(int(lng[:2])) + str(float(lng[2:])*60)
     lng_ddm = lng_ddm.zfill(len(lng_ddm) + 1)
-    ddm = {'Lat_ddm': lat_ddm, 'N_S': 'S' if lat_sign else 'N',
-           'Lng_ddm': lng_ddm, 'E_W': 'W' if lng_sign else 'E'}
+    ddm = {'Lat_ddm': lat_ddm, 'N_S': 'S' if is_lat_negative else 'N',
+           'Lng_ddm': lng_ddm, 'E_W': 'W' if is_lng_negative else 'E'}
     return ddm
 
 
