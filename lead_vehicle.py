@@ -11,18 +11,14 @@ import socket
 
 import threadartists as ta
 
-UDP_IP = 'localhost'
-UDP_PORT = 10000
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-sock.bind((UDP_IP, UDP_PORT))
+  # UDP
 
 HISTORY_LEN = 200000
 
 
 def plot_geotif():
     """Work in progress..."""
-    noaachart = ta.GeoTifArtist(q_art, label='Stennis_QW', alpha=0.6, zorder=1)
+    noaachart = ta.GeoTifArtist(q_art, label='Stennis_QW', alpha=1, zorder=1)
     noaachart.add_data_to_artist('Cat_Island_Low_2.tif')   # Cat_Island_Low_2.tif , Stennis_QW.tif
     noaachart.set_xlim(noaachart.geotif_xlim[0], noaachart.geotif_xlim[1])
     noaachart.set_ylim(noaachart.geotif_ylim[0], noaachart.geotif_ylim[1])
@@ -31,6 +27,7 @@ def plot_geotif():
 
 
 def lead():
+    soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # daa = pd.read_csv("20210422_085502_original.csv")  # wamv log
     # lat_w = daa['Latitude (Deg N)']
     # lng_w = daa['Longitude (Deg W)']
@@ -48,6 +45,7 @@ def lead():
     icon_size = 0.02
     lead_icon.add_data_to_artist('WAM-V_icon_small.png', icon_size, (0, 0), 0)
     i = 0
+    print(len(lng_w))
     while i < len(lng_w):
         new_xy = (lng_w[i], lat_w[i])
         # print(new_xy, tme[i])
@@ -58,11 +56,10 @@ def lead():
         data = "$GPGLL," + str(latlng['Lat_ddm']) + ',' + latlng['N_S'] + ',' + str(latlng['Lng_ddm']) + ',' + \
                latlng['E_W'] + ',' + str(''.join(str(tme[i]).split(':'))) + ',A,A*'
         wamv_nema = data + functions.check_sum(data) + '\r\n'
-        sock.sendto(bytes(wamv_nema, 'utf-8'), ('localhost', 10000))
-
-        print(data)
+        soc.sendto(bytes(wamv_nema, 'utf-8'), ('localhost', 10000))
+        # print(i, data)
         i += 1
-        time.sleep(0.05)
+        time.sleep(0.1)
 
 
 def _quit():
