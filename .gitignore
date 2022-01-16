@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+!/Cat_Island_Low_2.tif
+!/Cat_Island_Low.tif
+!/Stennis_QW.tif
+!/WAM-V_icon_small.png
