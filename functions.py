@@ -426,3 +426,7 @@ def iver_status(iver='3089', port_rf='com7', port_ac='com4', time_out=1, time_wa
         return osi_return
     except Exception as iverStatus:
         return osi_return
+
+
+# if __name__ == '__main__':
+#
