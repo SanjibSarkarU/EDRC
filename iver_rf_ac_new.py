@@ -24,7 +24,7 @@ q_log = Queue()
 
 TIMEOUT_RF = 1
 TIMEOUT_AC = 1
-rf_port, ac_port = 'com2', 'com5'
+rf_port, ac_port = 'COM4', 'com5'
 # rf_port = str(input('RF COMPort: '))  # 'COM2'
 # ac_port = str(input('AC COMPort: '))  # 'COM5'
 
@@ -90,7 +90,7 @@ def read_rf():
                         osd_ak += 1
         except Exception as e:
             q_log.put([datetime.datetime.now().strftime("%H:%M:%S:%f"), ':', e])
-            ser_ac.reset_input_buffer()
+            ser_rf.reset_input_buffer()
             continue
 
 
