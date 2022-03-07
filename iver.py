@@ -17,7 +17,7 @@ from rasterio.plot import show
 
 import functions
 # just checking git
-rf, ac = 'COM1', 'COM4'
+rf, ac = 'COM11', 'COM13'
 # rf, ac = 'COM5', 'COM7'
 
 ser_rf = serial.Serial(rf, baudrate=9600, bytesize=8, parity='N', stopbits=1, timeout=1, xonxoff=0)
